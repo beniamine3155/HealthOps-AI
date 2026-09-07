@@ -21,3 +21,24 @@ stages:
       hash: md5
       md5: 7bdb1fb91388011b5ecc5a28fc9b819a
       size: 1096
+  train_claim:
+    cmd: python -m src.training_pipeline --model claim
+    deps:
+    - path: outputs/feature_schema.json
+      hash: md5
+      md5: 7bdb1fb91388011b5ecc5a28fc9b819a
+      size: 1096
+    - path: outputs/model_table.csv
+      hash: md5
+      md5: 1065faa7ac90b3ec24363587a13013ba
+      size: 4408065
+    - path: src
+      hash: md5
+      md5: 980b0884fedad49b5b436e6e1093b425.dir
+      size: 38048
+      nfiles: 12
+    outs:
+    - path: models/claim_model_complete_pipeline.joblib
+      hash: md5
+      md5: 7fb0cd3107d36144e78dcf285d30df4f
+      size: 5265491

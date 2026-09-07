@@ -106,7 +106,8 @@ def run_pipeline(model_type: str):
 
         model_info = mlflow.sklearn.log_model(
             sk_model=pipeline,
-            name="model"
+            name="model",
+            skops_trusted_types=["numpy.dtype"]
         )
 
         run_id = run.info.run_id
