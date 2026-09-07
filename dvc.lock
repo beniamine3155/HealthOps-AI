@@ -1,0 +1,23 @@
+schema: '2.0'
+stages:
+  train_risk:
+    cmd: python -m src.training_pipeline --model risk
+    deps:
+    - path: outputs/model_table.csv
+      hash: md5
+      md5: 1065faa7ac90b3ec24363587a13013ba
+      size: 4408065
+    - path: src
+      hash: md5
+      md5: 980b0884fedad49b5b436e6e1093b425.dir
+      size: 38048
+      nfiles: 12
+    outs:
+    - path: models/risk_model_complete_pipeline.joblib
+      hash: md5
+      md5: 8b71c413d9b2a5e2523bfe2fb9ee7dec
+      size: 5281875
+    - path: outputs/feature_schema.json
+      hash: md5
+      md5: 7bdb1fb91388011b5ecc5a28fc9b819a
+      size: 1096
