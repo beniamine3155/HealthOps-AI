@@ -1,8 +1,8 @@
 from fastapi import APIRouter
-
+from monitoring.drift_monitor import run_psi_monitor
 
 router = APIRouter()
 
 @router.get("/psi")
 def get_psi():
-    return {"message": "monitoring"}
+    return run_psi_monitor()
