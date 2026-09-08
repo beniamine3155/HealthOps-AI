@@ -1,5 +1,3 @@
-from urllib import response
-
 import pandas as pd
 from api.services.model_loader import load_risk_model, load_claim_model
 from monitoring.logger import log_prediction
