@@ -7,7 +7,7 @@ app = FastAPI(title="HealthOps ML API")
 
 @app.get("/")
 def root():
-    return {"message": "HealthOpa ML API is running"}
+    return {"message": "HealthOps ML API is running"}
 
 
 @app.get("/health")
