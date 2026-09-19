@@ -42,8 +42,8 @@ jobs:
           echo "AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION"
           aws configure list
           aws sts get-caller-identity
-          aws s3 ls s3://amzn-s3-healthcare
-          aws s3 ls s3://amzn-s3-healthcare/dvc-store/ --recursive | head
+          aws s3 ls s3://amzn-s3-healthops
+          aws s3 ls s3://amzn-s3-healthops/dvc-store/ --recursive | head
 
       - name: Pull DVC artifacts
         run: |
