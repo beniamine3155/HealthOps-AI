@@ -20,4 +20,9 @@ app.include_router(claim.router, prefix="/predict", tags=["Claim Status Predicti
 app.include_router(monitoring.router, prefix="/monitor", tags=["Monitoring"])
 
 
+print("Registered routes:")
+for route in app.routes:
+    print(route.path)
+
+
 
