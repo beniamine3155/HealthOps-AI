@@ -1,5 +1,7 @@
 [core]
-    remote = localstore
+    remote = myremote
     autostage = true
 ['remote "localstore"']
     url = ../dvc-storage
+['remote "myremote"']
+    url = s3://amzn-s3-healthops/dvc-store
