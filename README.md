@@ -32,18 +32,18 @@ My solution uses historical healthcare operations data to learn patterns in pati
 
 I used a layered approach so that each part of the project has a clear responsibility:
 
-1. I loaded and validated the source data.
-2. I created a relational analysis layer with SQLite.
-3. I joined patient, visit, and billing information into one modeling table.
-4. I explored distributions, missing values, outliers, correlations, and class balance.
-5. I created features that represent patient history, visit timing, cost, and provider behavior.
-6. I compared multiple classification algorithms.
-7. I selected a time-based train and test split to better represent future prediction.
-8. I packaged preprocessing and modeling together in complete scikit-learn pipelines.
-9. I logged experiments and registered models with MLflow.
-10. I exposed the models through FastAPI and a Gradio interface.
-11. I added DVC configuration for repeatable data and model versioning.
-12. I added prediction logging and PSI-based feature drift monitoring.
+1. loaded and validated the source data.
+2. created a relational analysis layer with SQLite.
+3. joined patient, visit, and billing information into one modeling table.
+4. explored distributions, missing values, outliers, correlations, and class balance.
+5. created features that represent patient history, visit timing, cost, and provider behavior.
+6. compared multiple classification algorithms.
+7. selected a time-based train and test split to better represent future prediction.
+8. packaged preprocessing and modeling together in complete scikit-learn pipelines.
+9. logged experiments and registered models with MLflow.
+10. exposed the models through FastAPI and a Gradio interface.
+11. added DVC configuration for repeatable data and model versioning.
+12. added prediction logging and PSI-based feature drift monitoring.
 
 ### Why This Approach Fits This Project
 
@@ -302,83 +302,6 @@ I use Population Stability Index, or PSI, to compare the feature distribution se
 
 PSI does not measure whether an individual prediction is correct. It measures whether the population of incoming values has changed. A large change can indicate a change in patient mix, department behavior, data collection, or operational conditions. It is a signal for investigation and possible retraining, not an automatic diagnosis or clinical decision.
 
-### PSI monitoring flow
-
-```mermaid
-flowchart TD
-    A[Training data] --> B[Select monitored feature]
-    B --> C[Create baseline bins]
-    C --> D[Save feature_baseline.json]
-    E[API prediction request] --> F[Write prediction log]
-    F --> G[Load production feature values]
-    D --> H[Load expected distribution]
-    G --> I[Use the same bin edges]
-    H --> J[Compare expected and actual distributions]
-    I --> J
-    J --> K[Calculate PSI]
-    K --> L{PSI threshold}
-    L -->|Below 0.1| M[No drift]
-    L -->|0.1 to below 0.2| N[Moderate drift]
-    L -->|0.2 or higher| O[Significant drift and retraining review]
-```
-
-### How PSI is calculated in this project
-
-The calculation has five stages:
-
-1. I select `length_of_stay_hours` as the feature to monitor.
-2. I load the training baseline from `outputs/feature_baseline.json`.
-3. I read production records from `logs/predictions.log` and collect the feature values.
-4. I place the production values into the same bins used for the training baseline.
-5. I compare the expected and actual proportions and return the PSI value and status.
-
-The project baseline is:
-
-| Length of stay bin | Bin range | Expected training share |
-| --- | --- | ---: |
-| Bin 1 | 0 to below 24 hours | 0.20 |
-| Bin 2 | 24 to below 72 hours | 0.50 |
-| Bin 3 | 72 to 200 hours | 0.30 |
-
-The bin edges are `[0, 24, 72, 200]`. Using the same edges for training and production is important because a different set of bins would make the distributions difficult to compare.
-
-For each bin, I calculate the contribution using:
-
-$$
-PSI_i = (Actual_i - Expected_i) \times \ln\left(\frac{Actual_i}{Expected_i}\right)
-$$
-
-The total PSI is the sum of the contributions from all bins:
-
-$$
-PSI = \sum_{i=1}^{n} (Actual_i - Expected_i) \times \ln\left(\frac{Actual_i}{Expected_i}\right)
-$$
-
-The implementation uses a small value of `0.000001` whenever a proportion is zero. This prevents a logarithm of zero and allows the monitor to return a usable value.
-
-### Example calculation using this project baseline
-
-Suppose ten production visits produce the following distribution:
-
-| Length of stay bin | Expected share | Actual production share |
-| --- | ---: | ---: |
-| Bin 1 | 0.20 | 0.40 |
-| Bin 2 | 0.50 | 0.40 |
-| Bin 3 | 0.30 | 0.20 |
-
-The PSI contributions are:
-
-$$
-\begin{aligned}
-PSI_1 &= (0.40 - 0.20) \times \ln(0.40 / 0.20) = 0.1386 \\
-PSI_2 &= (0.40 - 0.50) \times \ln(0.40 / 0.50) = 0.0223 \\
-PSI_3 &= (0.20 - 0.30) \times \ln(0.20 / 0.30) = 0.0405 \\
-PSI &= 0.1386 + 0.0223 + 0.0405 = 0.2014
-\end{aligned}
-$$
-
-The result is approximately `0.2014`, which is at or above `0.2`. The monitoring response would therefore classify this as `Significant drift - retrain recommended`.
-
 ### Monitoring thresholds
 
 | PSI value | Interpretation in this project | Action |
@@ -389,11 +312,6 @@ The result is approximately `0.2014`, which is at or above `0.2`. The monitoring
 
 The API exposes this workflow through `GET /monitor/psi`. The endpoint returns the feature name, records used, expected distribution, actual distribution, bin edges, PSI score, status, and threshold values. The monitor requires at least 10 usable production values before it calculates PSI.
 
-### Current implementation behavior
-
-The intended monitoring flow is complete in `monitoring/drift_monitor.py`, but the current log format has an integration limitation. `monitoring/logger.py` writes the original input as an SHA-256 `input_hash`, while `load_prediction_logs()` currently looks for an `input_data` object containing the raw feature values. Because the existing records contain the hash but not `input_data`, the current `/monitor/psi` endpoint reports that no usable production prediction logs are available.
-
-To make the calculation work with real API traffic, the logging design must retain an appropriate privacy-aware representation of the monitored feature, such as the length-of-stay value or an approved aggregated monitoring record. After at least 10 usable records are available, the endpoint can build the actual distribution and calculate PSI using the workflow above.
 
 ## API and User Interface
 
