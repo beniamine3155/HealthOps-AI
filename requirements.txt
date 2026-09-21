@@ -52,3 +52,9 @@ requests
 python-dotenv
 
 
+# For deployment
+kubectl # kubernetes command-line tool
+eksctl # eksctl command-line tool for Amazon EKS
+
+
+

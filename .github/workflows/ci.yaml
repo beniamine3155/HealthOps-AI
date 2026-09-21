@@ -3,6 +3,8 @@ name: CI Pipeline
 on:
   push:
     branches: ["**"]
+    paths-ignore:
+      - 'README.md'
   pull_request:
     branches: [main]
 
